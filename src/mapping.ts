@@ -1,122 +1,134 @@
-import { BigInt } from "@graphprotocol/graph-ts"
+import { Transfer as ChapterOneTransfer } from "../generated/ChapterOne/ChapterOne";
+import { Transfer as ChapterTwoTransfer } from "../generated/ChapterTwo/ChapterTwo";
 import {
-  ChapterOne,
-  AdminApproved,
-  AdminRevoked,
-  Approval,
-  ApprovalForAll,
-  DefaultRoyaltiesUpdated,
-  ExtensionApproveTransferUpdated,
-  ExtensionBlacklisted,
-  ExtensionRegistered,
-  ExtensionRoyaltiesUpdated,
-  ExtensionUnregistered,
-  MintPermissionsUpdated,
-  OwnershipTransferred,
-  RoyaltiesUpdated,
-  Transfer
-} from "../generated/ChapterOne/ChapterOne"
-import { ExampleEntity } from "../generated/schema"
+  ListingCreated,
+  ListingPurchased,
+  ListingUpdated,
+} from "../generated/ERC721Listings/ERC721Listings";
+import { ChapterOneToken, Listing, Wallet } from "../generated/schema";
 
-export function handleAdminApproved(event: AdminApproved): void {
-  // Entities can be loaded from the store using a string ID; this ID
-  // needs to be unique across all entities of the same type
-  let entity = ExampleEntity.load(event.transaction.from.toHex())
-
-  // Entities only exist after they have been saved to the store;
-  // `null` checks allow to create entities on demand
-  if (!entity) {
-    entity = new ExampleEntity(event.transaction.from.toHex())
-
-    // Entity fields can be set using simple assignments
-    entity.count = BigInt.fromI32(0)
+function resolveListingStatus(status: i32): string {
+  switch (status) {
+    case 0:
+      return "Active";
+    case 1:
+      return "Inactive";
+    case 2:
+      return "Executed";
+    default:
+      return "Inactive";
   }
-
-  // BigInt and BigDecimal math are supported
-  entity.count = entity.count + BigInt.fromI32(1)
-
-  // Entity fields can be set based on event parameters
-  entity.account = event.params.account
-  entity.sender = event.params.sender
-
-  // Entities can be written to the store with `.save()`
-  entity.save()
-
-  // Note: If a handler doesn't require existing field values, it is faster
-  // _not_ to load the entity from the store. Instead, create it fresh with
-  // `new Entity(...)`, set the fields that should be updated and save the
-  // entity back to the store. Fields that were not set or unset remain
-  // unchanged, allowing for partial updates to be applied.
-
-  // It is also possible to access smart contracts from mappings. For
-  // example, the contract that has emitted the event can be connected to
-  // with:
-  //
-  // let contract = Contract.bind(event.address)
-  //
-  // The following functions can then be called on this contract to access
-  // state variables and other data:
-  //
-  // - contract.balanceOf(...)
-  // - contract.getAdmins(...)
-  // - contract.getApproved(...)
-  // - contract.getExtensions(...)
-  // - contract.getFeeBps(...)
-  // - contract.getFeeRecipients(...)
-  // - contract.getFees(...)
-  // - contract.getRoyalties(...)
-  // - contract.isAdmin(...)
-  // - contract.isApprovedForAll(...)
-  // - contract.mintBase(...)
-  // - contract.mintBase(...)
-  // - contract.mintBaseBatch(...)
-  // - contract.mintBaseBatch(...)
-  // - contract.mintExtension(...)
-  // - contract.mintExtension(...)
-  // - contract.mintExtensionBatch(...)
-  // - contract.mintExtensionBatch(...)
-  // - contract.name(...)
-  // - contract.owner(...)
-  // - contract.ownerOf(...)
-  // - contract.royaltyInfo(...)
-  // - contract.supportsInterface(...)
-  // - contract.symbol(...)
-  // - contract.tokenExtension(...)
-  // - contract.tokenURI(...)
 }
 
-export function handleAdminRevoked(event: AdminRevoked): void {}
+export function handleListingCreated(event: ListingCreated): void {
+  const tokenId = event.params.tokenId;
+  const price = event.params.price;
+  const status = event.params.status;
 
-export function handleApproval(event: Approval): void {}
+  const listing = new Listing(tokenId.toString());
+  listing.tokenId = tokenId;
+  listing.price = price;
+  listing.status = resolveListingStatus(status);
+  listing.save();
 
-export function handleApprovalForAll(event: ApprovalForAll): void {}
+  const token = ChapterOneToken.load(tokenId.toString());
+  if (token) {
+    token.listing = listing.id;
+    token.save();
+  }
+}
 
-export function handleDefaultRoyaltiesUpdated(
-  event: DefaultRoyaltiesUpdated
-): void {}
+export function handleListingPurchased(event: ListingPurchased): void {
+  const tokenId = event.params.tokenId;
+  const price = event.params.price;
 
-export function handleExtensionApproveTransferUpdated(
-  event: ExtensionApproveTransferUpdated
-): void {}
+  let listing = Listing.load(tokenId.toString());
+  if (listing === null) {
+    listing = new Listing(tokenId.toString());
+    listing.tokenId = tokenId;
+  }
 
-export function handleExtensionBlacklisted(event: ExtensionBlacklisted): void {}
+  listing.price = price;
+  listing.status = resolveListingStatus(2);
+  listing.save();
+}
 
-export function handleExtensionRegistered(event: ExtensionRegistered): void {}
+export function handleListingUpdated(event: ListingUpdated): void {
+  const tokenId = event.params.tokenId;
+  const price = event.params.price;
+  const status = event.params.status;
 
-export function handleExtensionRoyaltiesUpdated(
-  event: ExtensionRoyaltiesUpdated
-): void {}
+  let listing = Listing.load(tokenId.toString());
+  if (listing === null) {
+    listing = new Listing(tokenId.toString());
+    listing.tokenId = tokenId;
+  }
 
-export function handleExtensionUnregistered(
-  event: ExtensionUnregistered
-): void {}
+  listing.price = price;
+  listing.status = resolveListingStatus(status);
+  listing.save();
+}
 
-export function handleMintPermissionsUpdated(
-  event: MintPermissionsUpdated
-): void {}
+export function handleChapterOneTransfer(event: ChapterOneTransfer): void {
+  const tokenId = event.params.tokenId;
+  const fromAddress = event.params.from;
+  const toAddress = event.params.to;
 
-export function handleOwnershipTransferred(event: OwnershipTransferred): void {}
+  let fromWallet = Wallet.load(fromAddress.toHexString());
+  if (!fromWallet) {
+    fromWallet = new Wallet(fromAddress.toHexString());
+    fromWallet.address = fromAddress;
+    fromWallet.save();
+  }
 
-export function handleRoyaltiesUpdated(event: RoyaltiesUpdated): void {}
+  let toWallet = Wallet.load(toAddress.toHexString());
+  if (!toWallet) {
+    toWallet = new Wallet(toAddress.toHexString());
+    toWallet.address = toAddress;
+    toWallet.save();
+  }
 
-export function handleTransfer(event: Transfer): void {}
+  let token = ChapterOneToken.load(tokenId.toString());
+  if (!token) {
+    token = new ChapterOneToken(tokenId.toString());
+    token.tokenId = tokenId;
+    token.mintedAt = event.block.timestamp;
+    token.ownerHistory.push(fromWallet.id);
+  }
+
+  token.owner = toWallet.id;
+  token.ownerHistory.push(toWallet.id);
+  token.save();
+}
+
+export function handleChapterTwoTransfer(event: ChapterTwoTransfer): void {
+  const tokenId = event.params.tokenId;
+  const fromAddress = event.params.from;
+  const toAddress = event.params.to;
+
+  let fromWallet = Wallet.load(fromAddress.toHexString());
+  if (!fromWallet) {
+    fromWallet = new Wallet(fromAddress.toHexString());
+    fromWallet.address = fromAddress;
+    fromWallet.save();
+  }
+
+  let toWallet = Wallet.load(toAddress.toHexString());
+  if (!toWallet) {
+    toWallet = new Wallet(toAddress.toHexString());
+    toWallet.address = toAddress;
+    toWallet.save();
+  }
+
+  let token = ChapterOneToken.load(tokenId.toString());
+  if (!token) {
+    token = new ChapterOneToken(tokenId.toString());
+    token.tokenId = tokenId;
+    token.mintedAt = event.block.timestamp;
+    token.ownerHistory.push(fromWallet.id);
+  }
+
+  token.owner = toWallet.id;
+  token.ownerHistory.push(toWallet.id);
+  token.save();
+}

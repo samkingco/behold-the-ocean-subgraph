@@ -1,4 +1,4 @@
-specVersion: 0.0.1
+specVersion: 0.0.2
 schema:
   file: ./schema.graphql
 dataSources:
@@ -8,55 +8,64 @@ dataSources:
     source:
       address: "0x76501fde1ccb70b2cf4bc25209562b6e4373abb2"
       abi: ChapterOne
+      startBlock: 13625906
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.5
       language: wasm/assemblyscript
       entities:
-        - AdminApproved
-        - AdminRevoked
-        - Approval
-        - ApprovalForAll
-        - DefaultRoyaltiesUpdated
-        - ExtensionApproveTransferUpdated
-        - ExtensionBlacklisted
-        - ExtensionRegistered
-        - ExtensionRoyaltiesUpdated
-        - ExtensionUnregistered
-        - MintPermissionsUpdated
-        - OwnershipTransferred
-        - RoyaltiesUpdated
         - Transfer
       abis:
         - name: ChapterOne
           file: ./abis/ChapterOne.json
       eventHandlers:
-        - event: AdminApproved(indexed address,indexed address)
-          handler: handleAdminApproved
-        - event: AdminRevoked(indexed address,indexed address)
-          handler: handleAdminRevoked
-        - event: Approval(indexed address,indexed address,indexed uint256)
-          handler: handleApproval
-        - event: ApprovalForAll(indexed address,indexed address,bool)
-          handler: handleApprovalForAll
-        - event: DefaultRoyaltiesUpdated(address[],uint256[])
-          handler: handleDefaultRoyaltiesUpdated
-        - event: ExtensionApproveTransferUpdated(indexed address,bool)
-          handler: handleExtensionApproveTransferUpdated
-        - event: ExtensionBlacklisted(indexed address,indexed address)
-          handler: handleExtensionBlacklisted
-        - event: ExtensionRegistered(indexed address,indexed address)
-          handler: handleExtensionRegistered
-        - event: ExtensionRoyaltiesUpdated(indexed address,address[],uint256[])
-          handler: handleExtensionRoyaltiesUpdated
-        - event: ExtensionUnregistered(indexed address,indexed address)
-          handler: handleExtensionUnregistered
-        - event: MintPermissionsUpdated(indexed address,indexed address,indexed address)
-          handler: handleMintPermissionsUpdated
-        - event: OwnershipTransferred(indexed address,indexed address)
-          handler: handleOwnershipTransferred
-        - event: RoyaltiesUpdated(indexed uint256,address[],uint256[])
-          handler: handleRoyaltiesUpdated
         - event: Transfer(indexed address,indexed address,indexed uint256)
-          handler: handleTransfer
+          handler: handleChapterOneTransfer
+      file: ./src/mapping.ts
+  - kind: ethereum
+    name: ERC721Listings
+    network: mainnet
+    source:
+      # TODO: Replace with actual mainnet listings contract once deployed
+      address: "0x53494FAb84332F6C25c83241D50BA56D215D59A8"
+      abi: ERC721Listings
+      startBlock: 13625906
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.5
+      language: wasm/assemblyscript
+      entities:
+        - ListingCreated
+        - ListingPurchased
+        - ListingUpdated
+      abis:
+        - name: ERC721Listings
+          file: ./abis/ERC721Listings.json
+      eventHandlers:
+        - event: ListingCreated(indexed uint256,uint256,indexed uint8)
+          handler: handleListingCreated
+        - event: ListingPurchased(indexed uint256,uint256,indexed address)
+          handler: handleListingPurchased
+        - event: ListingUpdated(indexed uint256,uint256,indexed uint8)
+          handler: handleListingUpdated
+      file: ./src/mapping.ts
+  - kind: ethereum
+    name: ChapterTwo
+    network: mainnet
+    source:
+      address: "0x2da45De82A1f606CA43FB0f73681739Da365d687"
+      abi: ChapterTwo
+      startBlock: 13530405
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.5
+      language: wasm/assemblyscript
+      entities:
+        - Transfer
+      abis:
+        - name: ChapterTwo
+          file: ./abis/ChapterTwo.json
+      eventHandlers:
+        - event: Transfer(indexed address,indexed address,indexed uint256)
+          handler: handleChapterTwoTransfer
       file: ./src/mapping.ts

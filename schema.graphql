@@ -1,6 +1,36 @@
-type ExampleEntity @entity {
+enum ListingStatus {
+  Active
+  Inactive
+  Executed
+}
+
+type Listing @entity {
   id: ID!
-  count: BigInt!
-  account: Bytes! # address
-  sender: Bytes! # address
+  tokenId: BigInt!
+  price: BigInt!
+  status: ListingStatus!
+}
+
+type ChapterOneToken @entity {
+  id: ID!
+  tokenId: BigInt!
+  mintedAt: BigInt!
+  listing: Listing
+  owner: Wallet!
+  ownerHistory: [Wallet!]!
+}
+
+type ChapterTwoToken @entity {
+  id: ID!
+  tokenId: BigInt!
+  mintedAt: BigInt!
+  owner: Wallet!
+  ownerHistory: [Wallet!]!
+}
+
+type Wallet @entity {
+  id: ID!
+  address: Bytes!
+  chapterOneTokens: [ChapterOneToken!]! @derivedFrom(field: "owner")
+  chapterTwoTokens: [ChapterTwoToken!]! @derivedFrom(field: "owner")
 }
