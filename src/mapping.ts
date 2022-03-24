@@ -5,7 +5,12 @@ import {
   ListingPurchased,
   ListingUpdated,
 } from "../generated/ERC721Listings/ERC721Listings";
-import { ChapterOneToken, Listing, Wallet } from "../generated/schema";
+import {
+  ChapterOneToken,
+  ChapterTwoToken,
+  Listing,
+  Wallet,
+} from "../generated/schema";
 
 function resolveListingStatus(status: i32): string {
   switch (status) {
@@ -93,6 +98,7 @@ export function handleChapterOneTransfer(event: ChapterOneTransfer): void {
     token = new ChapterOneToken(tokenId.toString());
     token.tokenId = tokenId;
     token.mintedAt = event.block.timestamp;
+    token.mintedBy = toWallet.id;
     token.ownerHistory.push(fromWallet.id);
   }
 
@@ -120,11 +126,12 @@ export function handleChapterTwoTransfer(event: ChapterTwoTransfer): void {
     toWallet.save();
   }
 
-  let token = ChapterOneToken.load(tokenId.toString());
+  let token = ChapterTwoToken.load(tokenId.toString());
   if (!token) {
-    token = new ChapterOneToken(tokenId.toString());
+    token = new ChapterTwoToken(tokenId.toString());
     token.tokenId = tokenId;
     token.mintedAt = event.block.timestamp;
+    token.mintedBy = toWallet.id;
     token.ownerHistory.push(fromWallet.id);
   }
 
