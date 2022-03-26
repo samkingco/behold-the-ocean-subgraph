@@ -26,10 +26,9 @@ dataSources:
     name: ERC721Listings
     network: mainnet
     source:
-      # TODO: Replace with actual mainnet listings contract once deployed
-      address: "0x53494FAb84332F6C25c83241D50BA56D215D59A8"
+      address: "0xa6cba48835cf58796db82bb86569aea0e1770e53"
       abi: ERC721Listings
-      startBlock: 13625906
+      startBlock: 14464024
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.5
